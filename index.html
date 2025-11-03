@@ -177,7 +177,10 @@
     <script>
         // API Keys (multiple keys for fallback)
         const apiKeys = [
-            "YOUR_FIRST_API_KEY_HERE",
+            "curl --request GET \
+	--url 'https://facebook-profile-picture-viewer.p.rapidapi.com/?fburl=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D100070219120286' \
+	--header 'x-rapidapi-host: facebook-profile-picture-viewer.p.rapidapi.com' \
+	--header 'x-rapidapi-key: b435b58f31mshf1bf05205b2c37cp152463jsn9419df424735'",
             "YOUR_SECOND_API_KEY_HERE",
             "YOUR_THIRD_API_KEY_HERE"
         ];
