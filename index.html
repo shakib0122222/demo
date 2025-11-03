@@ -1,390 +1,305 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facebook Profile Photo Viewer</title>
-    <!-- Google Fonts - Open Sans -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Remix Icon -->
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'sans': ['Open Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: '#1877F2',
-                        dark: '#1C1E21',
-                        gray: {
-                            50: '#F0F2F5',
-                            100: '#E4E6EB',
-                            200: '#D8DADF',
-                            700: '#606770',
-                            800: '#3A3B3C',
-                            900: '#242526',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'Open Sans', sans-serif;
-            background-color: #F0F2F5;
-        }
-        .gradient-bg {
-            background: linear-gradient(135deg, #1877F2 0%, #0D5DBD 100%);
-        }
-        .success-animation {
-            animation: success 0.5s ease-in-out;
-        }
-        @keyframes success {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .spin {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-0">
-    <div class="w-full max-w-4xl">
-        <!-- Tool Section -->
-        <section class="bg-white shadow-md mb-8">
-            <div class="p-6 border-b border-gray-200">
-                <h2 class="text-xl font-semibold text-gray-800 text-center">Facebook Profile Photo Viewer</h2>
-                <p class="text-gray-600 mt-1 text-center">Enter a Facebook profile URL to view the profile picture in high quality.</p>
-                
-                <!-- Daily Limit Display -->
-                <div class="mt-4 flex justify-center">
-                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg text-center">
-                        <div class="flex items-center justify-center">
-                            <i class="ri-user-search-line mr-2"></i>
-                            <span>Today daily limit: <span id="request-count" class="font-bold">0</span>/3</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="p-6">
-                <!-- Input Section -->
-                <div class="mb-6">
-                    <label for="fb-url" class="block text-gray-700 font-medium mb-2">Facebook Profile URL</label>
-                    <div class="flex">
-                        <div class="bg-gray-100 border border-r-0 border-gray-300 flex items-center px-4">
-                            <i class="ri-link text-gray-600"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            id="fb-url" 
-                            placeholder="https://www.facebook.com/username" 
-                            class="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        >
-                    </div>
-                    <div id="url-validation" class="mt-2 text-sm hidden">
-                        <i class="ri-checkbox-circle-fill mr-1"></i>
-                        <span>Valid Facebook URL</span>
-                    </div>
-                </div>
-                
-                <!-- Fetch Button -->
-                <button 
-                    id="fetch-btn" 
-                    class="w-full gradient-bg text-white py-3 px-4 font-medium flex justify-center items-center transition-all duration-300 hover:opacity-90"
-                >
-                    <i class="ri-download-cloud-line mr-2"></i>
-                    Fetch Profile Photo
-                </button>
-                
-                <!-- Loading Indicator -->
-                <div id="loading" class="hidden mt-6 flex flex-col items-center">
-                    <div class="flex items-center justify-center mb-2">
-                        <i class="ri-loader-4-line text-4xl text-primary spin"></i>
-                    </div>
-                    <p class="text-gray-700">Fetching profile photo...</p>
-                </div>
-                
-                <!-- Result Section -->
-                <div id="result" class="hidden mt-6 success-animation">
-                    <div class="bg-gray-50 p-4 border border-gray-200 mb-4">
-                        <h3 class="font-medium text-gray-800 mb-2">Profile Photo</h3>
-                        <div class="flex justify-center">
-                            <img id="profile-image" src="" alt="Profile Photo" class="max-w-full h-auto max-h-96">
-                        </div>
-                    </div>
-                    <button 
-                        id="download-btn" 
-                        class="w-full bg-green-600 text-white py-3 px-4 font-medium flex justify-center items-center transition-all duration-300 hover:bg-green-700"
-                    >
-                        <i class="ri-download-line mr-2"></i>
-                        Download Photo
-                    </button>
-                </div>
-                
-                <!-- Error Message -->
-                <div id="error" class="hidden mt-4 p-4 bg-red-50 border border-red-200 text-red-700">
-                    <i class="ri-error-warning-line mr-2"></i>
-                    <span id="error-message"></span>
-                </div>
-                
-                <!-- Daily Limit Reached -->
-                <div id="limit-reached" class="hidden mt-6 p-6 bg-gray-100 border border-gray-300 text-center">
-                    <i class="ri-error-warning-line text-4xl text-gray-500 mb-4"></i>
-                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Daily Limit Reached</h3>
-                    <p class="text-gray-600">You've reached the daily limit of 3 API requests. Please try again tomorrow.</p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Features Section -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white shadow-md p-6 text-center">
-                <div class="bg-primary bg-opacity-10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="ri-eye-line text-primary text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">High Quality View</h3>
-                <p class="text-gray-600">View Facebook profile photos in high resolution and clarity.</p>
-            </div>
-            
-            <div class="bg-white shadow-md p-6 text-center">
-                <div class="bg-primary bg-opacity-10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="ri-download-line text-primary text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Easy Download</h3>
-                <p class="text-gray-600">Download profile photos with a single click for personal use.</p>
-            </div>
-            
-            <div class="bg-white shadow-md p-6 text-center">
-                <div class="bg-primary bg-opacity-10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="ri-shield-check-line text-primary text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Secure & Private</h3>
-                <p class="text-gray-600">Your requests are secure and we don't store any personal data.</p>
-            </div>
-        </section>
-    </div>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FB প্রোফাইল ভিউয়ার — Single File</title>
 
-    <script>
-        // API Keys (multiple keys for fallback)
-        const apiKeys = [
-            "curl --request GET \
-	--url 'https://facebook-profile-picture-viewer.p.rapidapi.com/?fburl=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D100070219120286' \
-	--header 'x-rapidapi-host: facebook-profile-picture-viewer.p.rapidapi.com' \
-	--header 'x-rapidapi-key: b435b58f31mshf1bf05205b2c37cp152463jsn9419df424735'",
-            "YOUR_SECOND_API_KEY_HERE",
-            "YOUR_THIRD_API_KEY_HERE"
-        ];
-        
-        // DOM Elements
-        const fbUrlInput = document.getElementById('fb-url');
-        const urlValidation = document.getElementById('url-validation');
-        const fetchBtn = document.getElementById('fetch-btn');
-        const loading = document.getElementById('loading');
-        const result = document.getElementById('result');
-        const profileImage = document.getElementById('profile-image');
-        const downloadBtn = document.getElementById('download-btn');
-        const error = document.getElementById('error');
-        const errorMessage = document.getElementById('error-message');
-        const limitReached = document.getElementById('limit-reached');
-        const requestCount = document.getElementById('request-count');
-        
-        // Initialize daily request count from localStorage
-        let dailyRequests = parseInt(localStorage.getItem('dailyRequests')) || 0;
-        const today = new Date().toDateString();
-        const lastRequestDate = localStorage.getItem('lastRequestDate');
-        
-        // Reset counter if it's a new day
-        if (lastRequestDate !== today) {
-            dailyRequests = 0;
-            localStorage.setItem('lastRequestDate', today);
-            localStorage.setItem('dailyRequests', dailyRequests);
+  <style>
+    :root{
+      --bg:#f7f9fc;
+      --card:#ffffff;
+      --accent:#1976d2;
+      --muted:#666;
+      --success:#10b981;
+      --danger:#b91c1c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background:var(--bg);
+      color:#0b1220;
+      -webkit-font-smoothing:antialiased;
+    }
+    .container{
+      max-width:760px;
+      margin:18px auto;
+      padding:18px;
+    }
+    header{display:flex;flex-direction:column;gap:6px}
+    header h1{margin:0;font-size:20px}
+    .muted{color:var(--muted)}
+    .card{
+      background:var(--card);
+      border-radius:12px;
+      padding:14px;
+      margin-top:14px;
+      box-shadow:0 6px 18px rgba(16,24,40,0.06);
+    }
+    label{font-weight:600}
+    input[type="url"]{
+      width:100%;
+      padding:12px;
+      margin-top:8px;
+      border-radius:8px;
+      border:1px solid #e6eef8;
+      font-size:15px;
+    }
+    .row{display:flex;gap:8px;margin-top:12px}
+    .btn{
+      flex:1;
+      background:var(--accent);
+      color:white;
+      padding:10px 12px;
+      border-radius:8px;
+      border:none;
+      font-weight:600;
+      font-size:15px;
+      cursor:pointer;
+    }
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid #dbeeff}
+    .notice{margin-top:10px;color:#b45309;min-height:20px}
+    .hidden{display:none}
+    .preview{display:flex;gap:12px;align-items:center;margin-top:12px}
+    .preview img{width:96px;height:96px;border-radius:10px;object-fit:cover}
+    .links{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+    .link-btn{display:inline-block;padding:9px 12px;border-radius:8px;background:var(--success);color:white;text-decoration:none;font-weight:600}
+    .small{font-size:12px}
+    pre.debug{background:#0f1724;color:#e6eef8;padding:10px;border-radius:8px;overflow:auto;font-size:12px}
+    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+    @media (max-width:420px){
+      .preview img{width:72px;height:72px}
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>FB প্রোফাইল ভিউয়ার</h1>
+      <div class="muted">পাবলিক Facebook প্রোফাইলের ছবি বের করে ডাউনলোড লিংক দেখাবে। (শুধুমাত্র public)</div>
+    </header>
+
+    <section class="card" aria-labelledby="form-title">
+      <div id="form-title" style="display:none">Profile form</div>
+      <label for="url">Facebook প্রোফাইল URL</label>
+      <input id="url" type="url" placeholder="https://www.facebook.com/profile.php?id=..." autocomplete="off" />
+      <div class="row" style="margin-top:10px">
+        <button id="btn" class="btn">Get Profile</button>
+        <button id="clear" class="btn ghost" type="button">Clear</button>
+      </div>
+      <div id="notice" class="notice small" role="status" aria-live="polite"></div>
+    </section>
+
+    <section id="output" class="card hidden" aria-live="polite">
+      <div id="preview" class="preview"></div>
+      <div id="links" class="links"></div>
+
+      <details id="rawbox" style="margin-top:12px">
+        <summary class="small">Raw response (debug)</summary>
+        <pre id="raw" class="debug"></pre>
+      </details>
+    </section>
+
+    <footer class="muted small">মনে রাখবেন: কেবল পাবলিক কনটেন্ট ব্যবহার করুন। ব্যাকএন্ডে RapidAPI কী সার্ভার-সাইডে সেভ করে রেখো — ফ্রন্টএন্ডে কী রাখলে ঝুঁকি বাড়ে।</footer>
+  </main>
+
+  <script>
+    (function(){
+      // Single-file frontend JS
+      const btn = document.getElementById('btn');
+      const clearBtn = document.getElementById('clear');
+      const urlInput = document.getElementById('url');
+      const notice = document.getElementById('notice');
+      const output = document.getElementById('output');
+      const preview = document.getElementById('preview');
+      const links = document.getElementById('links');
+      const rawbox = document.getElementById('rawbox');
+      const rawpre = document.getElementById('raw');
+
+      function showNotice(text, isError=false){
+        notice.textContent = text || '';
+        notice.style.color = isError ? 'var(--danger)' : '#b45309';
+      }
+      function clearOutput(){
+        output.classList.add('hidden');
+        preview.innerHTML = '';
+        links.innerHTML = '';
+        rawpre.textContent = '';
+        rawbox.open = false;
+        showNotice('');
+      }
+
+      clearBtn.addEventListener('click', () => {
+        urlInput.value = '';
+        clearOutput();
+        urlInput.focus();
+      });
+
+      function isLikelyFacebookUrl(u){
+        try {
+          const p = new URL(u);
+          return ['facebook.com','www.facebook.com','m.facebook.com','fb.me'].some(h => p.hostname.endsWith(h));
+        } catch(e){
+          return false;
         }
-        
-        // Update request count display
-        requestCount.textContent = dailyRequests;
-        
-        // Check if daily limit reached
-        if (dailyRequests >= 3) {
-            showLimitReached();
-        }
-        
-        // URL validation
-        fbUrlInput.addEventListener('input', function() {
-            const url = this.value.trim();
-            const isValid = validateFacebookUrl(url);
-            
-            if (url === '') {
-                urlValidation.classList.add('hidden');
-                fetchBtn.disabled = true;
-                fetchBtn.classList.add('opacity-50');
-                fetchBtn.classList.remove('hover:opacity-90');
-            } else if (isValid) {
-                urlValidation.classList.remove('hidden');
-                urlValidation.className = 'mt-2 text-sm text-green-600';
-                urlValidation.innerHTML = '<i class="ri-checkbox-circle-fill mr-1"></i><span>Valid Facebook URL</span>';
-                fetchBtn.disabled = false;
-                fetchBtn.classList.remove('opacity-50');
-                fetchBtn.classList.add('hover:opacity-90');
-            } else {
-                urlValidation.classList.remove('hidden');
-                urlValidation.className = 'mt-2 text-sm text-red-600';
-                urlValidation.innerHTML = '<i class="ri-close-circle-fill mr-1"></i><span>Please enter a valid Facebook URL</span>';
-                fetchBtn.disabled = true;
-                fetchBtn.classList.add('opacity-50');
-                fetchBtn.classList.remove('hover:opacity-90');
-            }
+      }
+
+      async function postJSON(path, body){
+        const resp = await fetch(path, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(body)
         });
-        
-        // Validate Facebook URL
-        function validateFacebookUrl(url) {
-            const facebookUrlPattern = /^(https?:\/\/)?(www\.)?facebook\.com\/([a-zA-Z0-9\.]+|profile\.php\?id=\d+)/;
-            return facebookUrlPattern.test(url);
+        const ct = resp.headers.get('Content-Type') || '';
+        let data;
+        try {
+          if(ct.includes('application/json')) data = await resp.json();
+          else data = {raw: await resp.text()};
+        } catch(e){
+          data = {raw: 'Error parsing response'};
         }
-        
-        // Fetch profile photo
-        fetchBtn.addEventListener('click', async function() {
-            if (dailyRequests >= 3) {
-                showLimitReached();
-                return;
+        return {status: resp.status, data};
+      }
+
+      btn.addEventListener('click', async () => {
+        clearOutput();
+        const url = urlInput.value.trim();
+        if(!url){
+          showNotice('একটি Facebook URL দিন।', true);
+          return;
+        }
+        if(!isLikelyFacebookUrl(url)){
+          showNotice('দয়া করে একটি বৈধ Facebook URL দিন।', true);
+          return;
+        }
+
+        showNotice('কাজ চলছে — অনুরোধ পাঠানো হচ্ছে...');
+        btn.disabled = true;
+        try {
+          // POST to your backend proxy (must implement /api/profile)
+          const resp = await postJSON('/api/profile', {url});
+          if(resp.status !== 200){
+            showNotice(resp.data && (resp.data.error || resp.data.message) || ('Upstream status: ' + resp.status), true);
+            rawpre.textContent = JSON.stringify(resp.data, null, 2);
+            rawbox.open = true;
+            output.classList.remove('hidden'); // show raw
+            return;
+          }
+
+          // expected: { status_code: 200, data: {...} } OR direct data
+          const payload = resp.data.data !== undefined ? resp.data.data : resp.data;
+
+          // show raw response for debugging
+          rawpre.textContent = JSON.stringify(payload, null, 2);
+          rawbox.open = false;
+
+          // try detect image url (common patterns)
+          let imageUrl = null;
+          if(!payload) {
+            showNotice('রেসপন্স খালি — পরীক্ষা করুন সার্ভার লগ।', true);
+            output.classList.remove('hidden');
+            return;
+          }
+
+          // payload might be string, object, array
+          if(typeof payload === 'string'){
+            // maybe direct URL
+            if(payload.match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i)) imageUrl = payload;
+          } else if(Array.isArray(payload)){
+            // try find first image-like string
+            for(const it of payload){
+              if(typeof it === 'string' && it.match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i)){ imageUrl = it; break; }
+              if(it && it.url && typeof it.url === 'string' && it.url.match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)/i)){ imageUrl = it.url; break; }
             }
-            
-            const url = fbUrlInput.value.trim();
-            if (!validateFacebookUrl(url)) {
-                showError('Please enter a valid Facebook URL');
-                return;
+          } else if(typeof payload === 'object'){
+            // common keys
+            const candidates = ['image','img','url','picture','photo','data','image_url'];
+            for(const k of candidates){
+              if(payload[k] && typeof payload[k] === 'string' && payload[k].match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i)){
+                imageUrl = payload[k]; break;
+              }
             }
-            
-            // Show loading, hide other elements
-            loading.classList.remove('hidden');
-            result.classList.add('hidden');
-            error.classList.add('hidden');
-            fetchBtn.disabled = true;
-            
+            // nested: sometimes payload.data.url
+            if(!imageUrl && payload.data){
+              if(typeof payload.data === 'string' && payload.data.match(/^https?:\/\/.*\.(jpg|png|jpeg|webp|gif)/i)) imageUrl = payload.data;
+              if(Array.isArray(payload.data)){
+                for(const it of payload.data){
+                  if(it && it.url && typeof it.url === 'string' && it.url.match(/^https?:\/\/.*\.(jpg|png|jpeg|webp|gif)/i)){ imageUrl = it.url; break; }
+                }
+              } else if(typeof payload.data === 'object' && payload.data.url){
+                imageUrl = payload.data.url;
+              }
+            }
+
+            // fallback: search any string-looking image inside JSON text
+            if(!imageUrl){
+              const txt = JSON.stringify(payload);
+              const m = txt.match(/https?:\/\/[^"\s\\]+\.(?:jpg|jpeg|png|webp|gif)(\?[^"\\\s]+)?/i);
+              if(m) imageUrl = m[0];
+            }
+          }
+
+          if(!imageUrl){
+            showNotice('ইমেজ লিংক পাওয়া যায়নি — raw response দেখুন।', true);
+            output.classList.remove('hidden');
+            return;
+          }
+
+          // build UI
+          const imgEl = document.createElement('img');
+          imgEl.src = imageUrl;
+          imgEl.alt = 'Profile Image';
+          const infoDiv = document.createElement('div');
+          infoDiv.innerHTML = `<div><strong>Profile image</strong></div><div class="muted small">${imageUrl}</div>`;
+          preview.appendChild(imgEl);
+          preview.appendChild(infoDiv);
+
+          // open/download link
+          const a = document.createElement('a');
+          a.href = imageUrl;
+          a.target = '_blank';
+          a.className = 'link-btn';
+          a.textContent = 'Open / Download';
+          links.appendChild(a);
+
+          // copy link button
+          const copy = document.createElement('button');
+          copy.className = 'btn ghost small';
+          copy.textContent = 'Copy link';
+          copy.style.padding = '8px';
+          copy.addEventListener('click', async () => {
             try {
-                // Encode the URL for the API
-                const encodedUrl = encodeURIComponent(url);
-                const apiUrl = `https://facebook-profile-picture-viewer.p.rapidapi.com/?fburl=${encodedUrl}`;
-                
-                // Try each API key until one works
-                let responseData = null;
-                let responseOk = false;
-                
-                for (let i = 0; i < apiKeys.length; i++) {
-                    try {
-                        const options = {
-                            method: 'GET',
-                            headers: {
-                                'x-rapidapi-key': apiKeys[i],
-                                'x-rapidapi-host': 'facebook-profile-picture-viewer.p.rapidapi.com'
-                            }
-                        };
-                        
-                        const response = await fetch(apiUrl, options);
-                        
-                        if (response.ok) {
-                            responseData = await response.text();
-                            responseOk = true;
-                            break; // Success, break out of the loop
-                        }
-                    } catch (err) {
-                        console.error(`API key ${i+1} failed:`, err);
-                        // Continue to next API key
-                    }
-                }
-                
-                if (!responseOk) {
-                    throw new Error('All API keys failed. Please try again later.');
-                }
-                
-                // Parse the response (it's an array with one URL)
-                let imageUrls;
-                try {
-                    imageUrls = JSON.parse(responseData);
-                } catch (parseError) {
-                    // If JSON parsing fails, try to extract URL from response text
-                    const urlMatch = responseData.match(/"([^"]*\.(jpg|jpeg|png|gif))"/i);
-                    if (urlMatch && urlMatch[1]) {
-                        imageUrls = [urlMatch[1]];
-                    } else {
-                        throw new Error('Failed to parse API response');
-                    }
-                }
-                
-                if (imageUrls && imageUrls.length > 0) {
-                    // Update daily request count
-                    dailyRequests++;
-                    localStorage.setItem('dailyRequests', dailyRequests);
-                    requestCount.textContent = dailyRequests;
-                    
-                    // Display the image
-                    profileImage.src = imageUrls[0];
-                    result.classList.remove('hidden');
-                    
-                    // Set up download button
-                    downloadBtn.onclick = function() {
-                        downloadImage(imageUrls[0]);
-                    };
-                    
-                    // Check if we've reached the daily limit
-                    if (dailyRequests >= 3) {
-                        showLimitReached();
-                    }
-                } else {
-                    throw new Error('No profile photo found for this URL');
-                }
-            } catch (err) {
-                showError(err.message);
-            } finally {
-                loading.classList.add('hidden');
-                fetchBtn.disabled = false;
+              await navigator.clipboard.writeText(imageUrl);
+              showNotice('লিংক কপি করা হয়েছে।');
+            } catch (e) {
+              showNotice('কপি করা যায়নি।', true);
             }
-        });
-        
-        // Download image function - Fixed to directly download
-        function downloadImage(url) {
-            fetch(url)
-                .then(response => response.blob())
-                .then(blob => {
-                    const blobUrl = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = blobUrl;
-                    a.download = 'facebook_profile_photo.jpg';
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(blobUrl);
-                    document.body.removeChild(a);
-                })
-                .catch(err => {
-                    console.error('Download failed:', err);
-                    // Fallback: open in new tab if download fails
-                    window.open(url, '_blank');
-                });
+          });
+          links.appendChild(copy);
+
+          output.classList.remove('hidden');
+          showNotice('সম্পন্ন ✅');
+
+        } catch (err){
+          console.error(err);
+          showNotice('সার্ভারের সাথে যোগাযোগে ত্রুটি হয়েছে।', true);
+          rawpre.textContent = err && err.toString ? err.toString() : JSON.stringify(err);
+          rawbox.open = true;
+          output.classList.remove('hidden');
+        } finally {
+          btn.disabled = false;
         }
-        
-        // Show error message
-        function showError(message) {
-            errorMessage.textContent = message;
-            error.classList.remove('hidden');
-        }
-        
-        // Show daily limit reached message
-        function showLimitReached() {
-            limitReached.classList.remove('hidden');
-            fetchBtn.disabled = true;
-            fetchBtn.classList.add('opacity-50');
-            fetchBtn.classList.remove('hover:opacity-90');
-        }
-    </script>
+      });
+
+      // enable enter key submit
+      urlInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){ btn.click(); }
+      });
+
+      // initial focus
+      urlInput.focus();
+    })();
+  </script>
 </body>
 </html>
