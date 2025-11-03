@@ -1,264 +1,367 @@
-<!doctype html>
-<html lang="bn">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FB Profile Viewer — Direct RapidAPI Demo</title>
-
-  <style>
-    :root{
-      --bg:#f7f9fc; --card:#fff; --accent:#1976d2; --muted:#666;
-      --success:#10b981; --danger:#b91c1c;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-      background:var(--bg); color:#0b1220; -webkit-font-smoothing:antialiased;
-    }
-    .wrap{max-width:760px;margin:18px auto;padding:18px}
-    header{display:flex;flex-direction:column;gap:6px}
-    header h1{margin:0;font-size:20px}
-    .muted{color:var(--muted)}
-    .card{background:var(--card);border-radius:12px;padding:14px;margin-top:14px;
-          box-shadow:0 6px 18px rgba(16,24,40,0.06)}
-    label{font-weight:600}
-    input[type="url"]{width:100%;padding:12px;margin-top:8px;border-radius:8px;
-                      border:1px solid #e6eef8;font-size:15px}
-    .row{display:flex;gap:8px;margin-top:12px}
-    .btn{flex:1;background:var(--accent);color:white;padding:10px 12px;border-radius:8px;
-         border:none;font-weight:600;font-size:15px;cursor:pointer}
-    .btn.ghost{background:transparent;color:var(--accent);border:1px solid #dbeeff}
-    .notice{margin-top:10px;color:#b45309;min-height:20px}
-    .hidden{display:none}
-    .preview{display:flex;gap:12px;align-items:center;margin-top:12px}
-    .preview img{width:96px;height:96px;border-radius:10px;object-fit:cover}
-    .links{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-    .link-btn{display:inline-block;padding:9px 12px;border-radius:8px;background:var(--success);
-              color:white;text-decoration:none;font-weight:600}
-    .small{font-size:12px}
-    pre.debug{background:#0f1724;color:#e6eef8;padding:10px;border-radius:8px;overflow:auto;font-size:12px}
-    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
-    @media (max-width:420px){ .preview img{width:72px;height:72px} }
-  </style>
-</head>
-<body>
-  <main class="wrap">
-    <header>
-      <h1>FB প্রোফাইল ভিউয়ার (Direct RapidAPI)</h1>
-      <div class="muted">পাবলিক Facebook প্রোফাইলের প্রোফাইল ছবি বের করে দেখাবে ও ডাউনলোড নিশ্চিত করবে। (ডেমো)</div>
-    </header>
-
-    <section class="card" aria-labelledby="form-title">
-      <div id="form-title" style="display:none">Profile form</div>
-      <label for="url">Facebook প্রোফাইল URL</label>
-      <input id="url" type="url" placeholder="https://www.facebook.com/profile.php?id=..." autocomplete="off" />
-      <div class="row" style="margin-top:10px">
-        <button id="btn" class="btn">Get Profile</button>
-        <button id="clear" class="btn ghost" type="button">Clear</button>
-      </div>
-      <div id="notice" class="notice small" role="status" aria-live="polite"></div>
-    </section>
-
-    <section id="output" class="card hidden" aria-live="polite">
-      <div id="preview" class="preview"></div>
-      <div id="links" class="links"></div>
-
-      <details id="rawbox" style="margin-top:12px">
-        <summary class="small">Raw response (debug)</summary>
-        <pre id="raw" class="debug"></pre>
-      </details>
-    </section>
-
-    <footer class="muted small">
-      ⚠️ ডেমো মোড — কী ফ্রন্টএন্ডে এম্বেড করা আছে। প্রোডাকশনে ব্যাকএন্ড প্রক্সি ব্যবহার করো ও কী রোটেট করো।
-    </footer>
-  </main>
-
-  <script>
-    (function(){
-      // === CONFIG ===
-      // তোমার RapidAPI key এখানে বসাও (তুমি যে key দিয়েছেন)
-      const RAPIDAPI_KEY = "b435b58f31mshf1bf05205b2c37cp152463jsn9419df424735";
-      const RAPIDAPI_HOST = "facebook-profile-picture-viewer.p.rapidapi.com";
-      const ENDPOINT = "https://facebook-profile-picture-viewer.p.rapidapi.com/";
-
-      // === UI elements ===
-      const btn = document.getElementById('btn');
-      const clearBtn = document.getElementById('clear');
-      const urlInput = document.getElementById('url');
-      const notice = document.getElementById('notice');
-      const output = document.getElementById('output');
-      const preview = document.getElementById('preview');
-      const links = document.getElementById('links');
-      const rawpre = document.getElementById('raw');
-      const rawbox = document.getElementById('rawbox');
-
-      function showNotice(text, isError=false){
-        notice.textContent = text || '';
-        notice.style.color = isError ? 'var(--danger)' : '#b45309';
-      }
-      function clearOutput(){
-        output.classList.add('hidden');
-        preview.innerHTML = '';
-        links.innerHTML = '';
-        rawpre.textContent = '';
-        rawbox.open = false;
-        showNotice('');
-      }
-
-      clearBtn.addEventListener('click', () => {
-        urlInput.value = '';
-        clearOutput();
-        urlInput.focus();
-      });
-
-      function isLikelyFacebookUrl(u){
-        try {
-          const p = new URL(u);
-          return ['facebook.com','www.facebook.com','m.facebook.com','fb.me'].some(h => p.hostname.endsWith(h));
-        } catch(e){
-          return false;
-        }
-      }
-
-      async function callRapidApi(fburl){
-        const url = ENDPOINT + "?fburl=" + encodeURIComponent(fburl);
-        const resp = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'x-rapidapi-host': RAPIDAPI_HOST,
-            'x-rapidapi-key': RAPIDAPI_KEY
-          }
-        });
-        const ct = resp.headers.get('Content-Type') || '';
-        let data;
-        try {
-          if(ct.includes('application/json')){
-            data = await resp.json();
-          } else {
-            const text = await resp.text();
-            try { data = JSON.parse(text); } catch(e) { data = {raw: text}; }
-          }
-        } catch(e){
-          data = {raw: 'Error parsing response'};
-        }
-        return {status: resp.status, data};
-      }
-
-      btn.addEventListener('click', async () => {
-        clearOutput();
-        const fburl = urlInput.value.trim();
-        if(!fburl){
-          showNotice('একটি Facebook URL দিন।', true);
-          return;
-        }
-        if(!isLikelyFacebookUrl(fburl)){
-          showNotice('দয়া করে একটি বৈধ Facebook URL দিন।', true);
-          return;
-        }
-
-        showNotice('অনুরোধ পাঠানো হচ্ছে...');
-        btn.disabled = true;
-
-        try {
-          const res = await callRapidApi(fburl);
-
-          if(res.status !== 200){
-            showNotice('Upstream error: ' + (res.data && res.data.error ? res.data.error : res.status), true);
-            rawpre.textContent = JSON.stringify(res.data, null, 2);
-            rawbox.open = true;
-            output.classList.remove('hidden');
-            return;
-          }
-
-          const payload = res.data;
-          rawpre.textContent = JSON.stringify(payload, null, 2);
-          rawbox.open = false;
-
-          // Try to locate image URL in payload
-          let imageUrl = null;
-          // If payload has direct keys
-          if(typeof payload === 'string' && payload.match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)/i)){
-            imageUrl = payload;
-          } else if(payload){
-            // common possible fields
-            const tryKeys = ['url','image','img','picture','photo','image_url','profile_pic','profile_picture'];
-            for(const k of tryKeys){
-              if(payload[k] && typeof payload[k] === 'string' && payload[k].match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)/i)){
-                imageUrl = payload[k];
-                break;
-              }
-            }
-            // nested search
-            if(!imageUrl && payload.data){
-              if(typeof payload.data === 'string' && payload.data.match(/^https?:\/\/.*\.(jpg|png|jpeg|webp|gif)/i)) imageUrl = payload.data;
-              if(Array.isArray(payload.data)){
-                for(const it of payload.data){
-                  if(it && typeof it === 'string' && it.match(/^https?:\/\/.*\.(jpg|png|jpeg|webp|gif)/i)){ imageUrl = it; break; }
-                  if(it && it.url && typeof it.url === 'string' && it.url.match(/^https?:\/\/.*\.(jpg|png|jpeg|webp|gif)/i)){ imageUrl = it.url; break; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Profile Photo Viewer</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Open Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1877F2',
+                        dark: '#1C1E21',
+                        gray: {
+                            50: '#F0F2F5',
+                            100: '#E4E6EB',
+                            200: '#D8DADF',
+                            700: '#606770',
+                            800: '#3A3B3C',
+                            900: '#242526',
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.5s ease-out',
+                        'pulse-soft': 'pulseSoft 2s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        pulseSoft: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.8' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
+                    }
                 }
-              } else if(typeof payload.data === 'object' && payload.data.url){
-                imageUrl = payload.data.url;
-              }
             }
-            // last resort: regex search in whole JSON text
-            if(!imageUrl){
-              const txt = JSON.stringify(payload);
-              const m = txt.match(/https?:\/\/[^"\s\\]+\.(?:jpg|jpeg|png|webp|gif)(\?[^"\\\s]+)?/i);
-              if(m) imageUrl = m[0];
-            }
-          }
-
-          if(!imageUrl){
-            showNotice('ইমেজ লিংক পাওয়া যায়নি — Raw response দেখুন।', true);
-            output.classList.remove('hidden');
-            return;
-          }
-
-          // Build preview & links
-          const imgEl = document.createElement('img');
-          imgEl.src = imageUrl;
-          imgEl.alt = 'Profile Image';
-          const infoDiv = document.createElement('div');
-          infoDiv.innerHTML = `<div><strong>Profile image</strong></div><div class="muted small">${imageUrl}</div>`;
-          preview.appendChild(imgEl);
-          preview.appendChild(infoDiv);
-
-          const a = document.createElement('a');
-          a.href = imageUrl;
-          a.target = '_blank';
-          a.className = 'link-btn';
-          a.textContent = 'Open / Download';
-          links.appendChild(a);
-
-          const copy = document.createElement('button');
-          copy.className = 'btn ghost small';
-          copy.textContent = 'Copy link';
-          copy.style.padding = '8px';
-          copy.addEventListener('click', async () => {
-            try { await navigator.clipboard.writeText(imageUrl); showNotice('লিংক কপি করা হয়েছে।'); }
-            catch(e){ showNotice('কপি করা যায়নি।', true); }
-          });
-          links.appendChild(copy);
-
-          output.classList.remove('hidden');
-          showNotice('সম্পন্ন ✅');
-
-        } catch (err){
-          console.error(err);
-          showNotice('ত্রুটি: সার্ভারের সাথে যোগাযোগে সমস্যা হয়েছে।', true);
-          rawpre.textContent = err && err.toString ? err.toString() : JSON.stringify(err);
-          rawbox.open = true;
-          output.classList.remove('hidden');
-        } finally {
-          btn.disabled = false;
         }
-      });
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #F0F2F5 0%, #E4E6EB 100%);
+            min-height: 100vh;
+            font-family: 'Open Sans', sans-serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #1877F2 0%, #0D5DBD 100%);
+            transition: all 0.3s ease;
+        }
+        .gradient-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(24, 119, 242, 0.3);
+        }
+        .profile-box {
+            width: 260px;
+            height: 260px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 6px solid white;
+            margin: 0 auto;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+        .profile-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .profile-box:hover img {
+            transform: scale(1.08);
+        }
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 480px) {
+            .profile-box {
+                width: 200px;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div class="flex-1 container max-w-md mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="text-center mb-6 animate-fade-in-up">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Facebook Profile Photo Viewer</h1>
+            <p class="text-gray-600 text-sm mt-1">View & download high-quality profile pictures</p>
+        </div>
 
-      // Enter to submit
-      urlInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') btn.click(); });
-      urlInput.focus();
-    })();
-  </script>
+        <!-- Daily Limit -->
+        <div class="bg-white glass rounded-2xl p-4 mb-5 shadow-lg">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-gray-700 flex items-center">
+                    <i class="ri-calendar-check-line mr-2 text-primary"></i>
+                    Daily Limit
+                </span>
+                <span class="text-xl font-bold text-primary" id="request-count">0</span>
+                <span class="text-gray-500">/ 3</span>
+            </div>
+        </div>
+
+        <!-- Input Card -->
+        <div class="bg-white glass rounded-2xl p-5 mb-6 shadow-lg">
+            <label for="fb-url" class="block text-sm font-medium text-gray-700 mb-2">Facebook Profile URL</label>
+            <div class="flex rounded-xl overflow-hidden border border-gray-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary focus-within:ring-opacity-20">
+                <span class="inline-flex items-center px-4 bg-gray-100 text-gray-600">
+                    <i class="ri-link text-lg"></i>
+                </span>
+                <input 
+                    type="text" 
+                    id="fb-url" 
+                    placeholder="https://www.facebook.com/username" 
+                    class="flex-1 px-4 py-3 focus:outline-none text-sm"
+                >
+            </div>
+            <div id="url-validation" class="mt-2 text-sm hidden"></div>
+        </div>
+
+        <!-- Fetch Button -->
+        <button 
+            id="fetch-btn" 
+            class="w-full gradient-btn text-white py-4 rounded-2xl font-semibold flex justify-center items-center shadow-lg transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+        >
+            <i class="ri-download-cloud-2-line mr-2 text-xl"></i>
+            Fetch Profile Photo
+        </button>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden mt-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-primary bg-opacity-10 rounded-full animate-pulse-soft">
+                <i class="ri-loader-4-line text-3xl text-primary spin"></i>
+            </div>
+            <p class="text-gray-700 mt-3 font-medium">Fetching profile photo...</p>
+        </div>
+
+        <!-- Result -->
+        <div id="result" class="hidden mt-8 animate-fade-in-up">
+            <div class="bg-white glass rounded-3xl p-6 shadow-xl">
+                <h3 class="text-center font-semibold text-gray-800 mb-5">Profile Photo</h3>
+                <div class="profile-box">
+                    <img id="profile-image" src="" alt="Profile" class="w-full h-full object-cover">
+                </div>
+                <button 
+                    id="download-btn" 
+                    class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-xl font-medium flex justify-center items-center shadow-md transition-all duration-300 active:scale-95"
+                >
+                    <i class="ri-download-line mr-2"></i>
+                    Download Photo
+                </button>
+            </div>
+        </div>
+
+        <!-- Error -->
+        <div id="error" class="hidden mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            <i class="ri-error-warning-line mr-2"></i>
+            <span id="error-message"></span>
+        </div>
+
+        <!-- Limit Reached -->
+        <div id="limit-reached" class="hidden mt-6 p-6 bg-gradient-to-r from-orange-100 to-yellow-100 border border-orange-300 rounded-2xl text-center">
+            <i class="ri-alarm-warning-line text-5xl text-orange-600 mb-3"></i>
+            <h3 class="font-bold text-gray-800">Daily Limit Reached!</h3>
+            <p class="text-sm text-gray-600 mt-1">You've used 3/3 requests. Try again tomorrow.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-5 mt-auto">
+        <div class="text-center text-xs text-gray-600">
+            Developed by <span class="font-bold text-primary">SAKIN HOSSAIN</span>
+        </div>
+    </footer>
+
+    <script>
+        // === 5 API KEYS (তুমি এখানে ৫টা API Key বসাবে) ===
+        const API_KEYS = [
+            "b435b58f31mshf1bf05205b2c37cp152463jsn9419df424735", // তোমার দেওয়া Key
+            "YOUR_SECOND_API_KEY_HERE",
+            "YOUR_THIRD_API_KEY_HERE",
+            "YOUR_FOURTH_API_KEY_HERE",
+            "YOUR_FIFTH_API_KEY_HERE"
+        ];
+        const API_HOST = 'facebook-profile-picture-viewer.p.rapidapi.com';
+
+        // DOM Elements
+        const fbUrlInput = document.getElementById('fb-url');
+        const urlValidation = document.getElementById('url-validation');
+        const fetchBtn = document.getElementById('fetch-btn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const profileImage = document.getElementById('profile-image');
+        const downloadBtn = document.getElementById('download-btn');
+        const error = document.getElementById('error');
+        const errorMessage = document.getElementById('error-message');
+        const limitReached = document.getElementById('limit-reached');
+        const requestCount = document.getElementById('request-count');
+
+        // Daily Limit
+        let dailyRequests = parseInt(localStorage.getItem('dailyRequests') || '0');
+        const today = new Date().toDateString();
+        const lastDate = localStorage.getItem('lastRequestDate');
+
+        if (lastDate !== today) {
+            dailyRequests = 0;
+            localStorage.setItem('lastRequestDate', today);
+            localStorage.setItem('dailyRequests', '0');
+        }
+
+        requestCount.textContent = dailyRequests;
+        if (dailyRequests >= 3) showLimitReached();
+
+        // URL Validation
+        fbUrlInput.addEventListener('input', () => {
+            const url = fbUrlInput.value.trim();
+            const isValid = validateFacebookUrl(url);
+
+            if (!url) {
+                hideValidation(); disableFetch();
+            } else if (isValid) {
+                showValid(); enableFetch();
+            } else {
+                showInvalid(); disableFetch();
+            }
+        });
+
+        function validateFacebookUrl(url) {
+            return /^(https?:\/\/)?(www\.)?facebook\.com\/(profile\.php\?id=\d+|[A-Za-z0-9\.]+)/.test(url);
+        }
+
+        function showValid() {
+            urlValidation.className = 'mt-2 text-sm text-green-600 flex items-center';
+            urlValidation.innerHTML = '<i class="ri-checkbox-circle-fill mr-1"></i> Valid URL';
+            urlValidation.classList.remove('hidden');
+        }
+
+        function showInvalid() {
+            urlValidation.className = 'mt-2 text-sm text-red-600 flex items-center';
+            urlValidation.innerHTML = '<i class="ri-close-circle-fill mr-1"></i> Invalid URL';
+            urlValidation.classList.remove('hidden');
+        }
+
+        function hideValidation() { urlValidation.classList.add('hidden'); }
+        function enableFetch() { fetchBtn.disabled = false; fetchBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+        function disableFetch() { fetchBtn.disabled = true; fetchBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
+
+        // Fetch with Fallback (5 Keys)
+        fetchBtn.addEventListener('click', async () => {
+            if (dailyRequests >= 3) return showLimitReached();
+
+            const url = fbUrlInput.value.trim();
+            if (!validateFacebookUrl(url)) return showError('Invalid Facebook URL');
+
+            showLoading(); hideResult(); hideError();
+
+            let imageUrl = null;
+            let usedKey = null;
+
+            for (const key of API_KEYS) {
+                try {
+                    const encoded = encodeURIComponent(url);
+                    const apiUrl = `https://${API_HOST}/?fburl=${encoded}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'GET',
+                        headers: {
+                            'x-rapidapi-key': key,
+                            'x-rapidapi-host': API_HOST
+                        }
+                    });
+
+                    if (response.ok) {
+                        const text = await response.text();
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                            imageUrl = Array.isArray(data) ? data[0] : data;
+                        } catch {
+                            const match = text.match(/"(https:\/\/[^"]+\.(jpg|jpeg|png))"/i);
+                            imageUrl = match ? match[1] : null;
+                        }
+
+                        if (imageUrl) {
+                            usedKey = key;
+                            break;
+                        }
+                    }
+                } catch (err) {
+                    console.log(`Key failed: ${key.substring(0, 8)}...`);
+                }
+            }
+
+            if (!imageUrl) {
+                showError('Failed to fetch photo. All API keys failed or no photo found.');
+                hideLoading();
+                return;
+            }
+
+            // Success
+            dailyRequests++;
+            localStorage.setItem('dailyRequests', dailyRequests);
+            requestCount.textContent = dailyRequests;
+
+            profileImage.src = imageUrl;
+            showResult();
+
+            downloadBtn.onclick = () => downloadImage(imageUrl);
+
+            if (dailyRequests >= 3) setTimeout(showLimitReached, 800);
+
+            hideLoading();
+        });
+
+        // Helpers
+        function showLoading() { loading.classList.remove('hidden'); }
+        function hideLoading() { loading.classList.add('hidden'); }
+        function showResult() { result.classList.remove('hidden'); }
+        function hideResult() { result.classList.add('hidden'); }
+        function showError(msg) { errorMessage.textContent = msg; error.classList.remove('hidden'); }
+        function hideError() { error.classList.add('hidden'); }
+        function showLimitReached() { limitReached.classList.remove('hidden'); disableFetch(); }
+
+        // Download
+        function downloadImage(url) {
+            fetch(url)
+                .then(res => res.blob())
+                .then(blob => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'fb_profile_photo.jpg';
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                })
+                .catch(() => window.open(url, '_blank'));
+        }
+    </script>
 </body>
 </html>
