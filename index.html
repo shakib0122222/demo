@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facebook Profile Photo Viewer</title>
+    <title>FB Profile Photo Viewer</title>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Remix Icon -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Tailwind CSS -->
@@ -14,39 +14,23 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        'sans': ['Open Sans', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         primary: '#1877F2',
+                        accent: '#42B72A',
                         dark: '#1C1E21',
-                        gray: {
-                            50: '#F0F2F5',
-                            100: '#E4E6EB',
-                            200: '#D8DADF',
-                            700: '#606770',
-                            800: '#3A3B3C',
-                            900: '#242526',
-                        }
+                        gray: { 50: '#F0F2F5', 100: '#E4E6EB', 200: '#D8DADF', 700: '#606770' }
                     },
                     animation: {
-                        'fade-in-up': 'fadeInUp 0.5s ease-out',
-                        'pulse-soft': 'pulseSoft 2s infinite',
-                        'float': 'float 3s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                        'float': 'float 4s ease-in-out infinite',
+                        'spin-slow': 'spin 2s linear infinite'
                     },
                     keyframes: {
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' }
-                        },
-                        pulseSoft: {
-                            '0%, 100%': { opacity: '1' },
-                            '50%': { opacity: '0.8' }
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-10px)' }
-                        }
+                        fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        pulseGlow: { '0%, 100%': { boxShadow: '0 0 20px rgba(24, 119, 242, 0.4)' }, '50%': { boxShadow: '0 0 30px rgba(24, 119, 242, 0.7)' } },
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } }
                     }
                 }
             }
@@ -54,47 +38,75 @@
     </script>
     <style>
         body {
-            background: linear-gradient(135deg, #F0F2F5 0%, #E4E6EB 100%);
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
             min-height: 100vh;
-            font-family: 'Open Sans', sans-serif;
+            font-family: 'Inter', sans-serif;
         }
-        .glass {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+            border-radius: 24px;
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
         .gradient-btn {
             background: linear-gradient(135deg, #1877F2 0%, #0D5DBD 100%);
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .gradient-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.6s;
+        }
+        .gradient-btn:hover::before {
+            left: 100%;
         }
         .gradient-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(24, 119, 242, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(24, 119, 242, 0.4);
         }
         .profile-box {
-            width: 260px;
-            height: 260px;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            border: 6px solid white;
+            width: 100%;
+            max-width: 320px;
+            height: 320px;
             margin: 0 auto;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            border: 8px solid white;
             position: relative;
-            animation: float 3s ease-in-out infinite;
+            animation: float 4s ease-in-out infinite;
         }
         .profile-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.4s ease;
+            transition: transform 0.5s ease;
         }
         .profile-box:hover img {
-            transform: scale(1.08);
+            transform: scale(1.1);
         }
-        .spin {
-            animation: spin 1s linear infinite;
+        .daily-limit-card {
+            background: linear-gradient(135deg, #42B72A 0%, #329D1D 100%);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(66, 183, 42, 0.3);
+            animation: pulse-glow 2s infinite;
+        }
+        .spin-loader {
+            animation: spin-slow 2s linear infinite;
         }
         @keyframes spin {
             from { transform: rotate(0deg); }
@@ -102,109 +114,110 @@
         }
         @media (max-width: 480px) {
             .profile-box {
-                width: 200px;
-                height: 200px;
+                height: 260px;
+                border-radius: 24px;
+                border-width: 6px;
             }
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
-    <div class="flex-1 container max-w-md mx-auto px-4 py-6">
+    <div class="flex-1 container max-w-md mx-auto px-4 py-6 space-y-6">
         <!-- Header -->
-        <div class="text-center mb-6 animate-fade-in-up">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Facebook Profile Photo Viewer</h1>
-            <p class="text-gray-600 text-sm mt-1">View & download high-quality profile pictures</p>
+        <div class="text-center animate-fade-in">
+            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">
+                FB Profile Photo Viewer
+            </h1>
+            <p class="text-gray-600 mt-2 text-sm font-medium">High-quality profile picture in seconds</p>
         </div>
 
-        <!-- Daily Limit -->
-        <div class="bg-white glass rounded-2xl p-4 mb-5 shadow-lg">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700 flex items-center">
-                    <i class="ri-calendar-check-line mr-2 text-primary"></i>
-                    Daily Limit
-                </span>
-                <span class="text-xl font-bold text-primary" id="request-count">0</span>
-                <span class="text-gray-500">/ 3</span>
+        <!-- Daily Limit Card -->
+        <div class="daily-limit-card text-center animate-fade-in">
+            <div class="flex items-center justify-center space-x-2">
+                <i class="ri-shield-check-line text-2xl"></i>
+                <span class="text-lg font-bold" id="request-count">0</span>
+                <span class="text-sm opacity-90">/ 3</span>
             </div>
+            <p class="text-xs mt-1 opacity-90">Daily Limit</p>
         </div>
 
         <!-- Input Card -->
-        <div class="bg-white glass rounded-2xl p-5 mb-6 shadow-lg">
-            <label for="fb-url" class="block text-sm font-medium text-gray-700 mb-2">Facebook Profile URL</label>
-            <div class="flex rounded-xl overflow-hidden border border-gray-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary focus-within:ring-opacity-20">
-                <span class="inline-flex items-center px-4 bg-gray-100 text-gray-600">
+        <div class="glass-card p-6 animate-fade-in">
+            <label class="block text-sm font-semibold text-gray-700 mb-3">Facebook Profile URL</label>
+            <div class="flex rounded-2xl overflow-hidden border-2 border-gray-200 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary focus-within:ring-opacity-20 transition-all">
+                <span class="inline-flex items-center px-4 bg-gradient-to-r from-primary to-blue-600 text-white">
                     <i class="ri-link text-lg"></i>
                 </span>
                 <input 
                     type="text" 
                     id="fb-url" 
-                    placeholder="https://www.facebook.com/username" 
-                    class="flex-1 px-4 py-3 focus:outline-none text-sm"
+                    placeholder="https://facebook.com/username" 
+                    class="flex-1 px-4 py-4 focus:outline-none text-sm font-medium"
                 >
             </div>
-            <div id="url-validation" class="mt-2 text-sm hidden"></div>
+            <div id="url-validation" class="mt-3 text-sm hidden"></div>
         </div>
 
         <!-- Fetch Button -->
         <button 
             id="fetch-btn" 
-            class="w-full gradient-btn text-white py-4 rounded-2xl font-semibold flex justify-center items-center shadow-lg transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full gradient-btn text-white py-5 rounded-2xl font-bold text-lg flex justify-center items-center shadow-xl transition-all duration-400 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled
         >
-            <i class="ri-download-cloud-2-line mr-2 text-xl"></i>
+            <i class="ri-download-cloud-2-line mr-3 text-xl"></i>
             Fetch Profile Photo
         </button>
 
         <!-- Loading -->
-        <div id="loading" class="hidden mt-8 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-primary bg-opacity-10 rounded-full animate-pulse-soft">
-                <i class="ri-loader-4-line text-3xl text-primary spin"></i>
+        <div id="loading" class="hidden text-center animate-fade-in">
+            <div class="inline-block p-6 bg-white rounded-full shadow-2xl animate-pulse">
+                <i class="ri-loader-4-line text-5xl text-primary spin-loader"></i>
             </div>
-            <p class="text-gray-700 mt-3 font-medium">Fetching profile photo...</p>
+            <p class="mt-4 text-lg font-semibold text-gray-700">Fetching your photo...</p>
         </div>
 
         <!-- Result -->
-        <div id="result" class="hidden mt-8 animate-fade-in-up">
-            <div class="bg-white glass rounded-3xl p-6 shadow-xl">
-                <h3 class="text-center font-semibold text-gray-800 mb-5">Profile Photo</h3>
+        <div id="result" class="hidden animate-fade-in">
+            <div class="glass-card p-6">
+                <h3 class="text-center text-xl font-bold text-gray-800 mb-5">Your Profile Photo</h3>
                 <div class="profile-box">
                     <img id="profile-image" src="" alt="Profile" class="w-full h-full object-cover">
                 </div>
                 <button 
                     id="download-btn" 
-                    class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-xl font-medium flex justify-center items-center shadow-md transition-all duration-300 active:scale-95"
+                    class="mt-6 w-full bg-gradient-to-r from-accent to-green-600 text-white py-4 rounded-2xl font-bold flex justify-center items-center shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
                 >
-                    <i class="ri-download-line mr-2"></i>
-                    Download Photo
+                    <i class="ri-download-line mr-2 text-xl"></i>
+                    Download HD Photo
                 </button>
             </div>
         </div>
 
         <!-- Error -->
-        <div id="error" class="hidden mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+        <div id="error" class="hidden p-5 bg-red-50 border-2 border-red-200 rounded-2xl text-red-700 text-sm font-medium animate-fade-in">
             <i class="ri-error-warning-line mr-2"></i>
             <span id="error-message"></span>
         </div>
 
         <!-- Limit Reached -->
-        <div id="limit-reached" class="hidden mt-6 p-6 bg-gradient-to-r from-orange-100 to-yellow-100 border border-orange-300 rounded-2xl text-center">
+        <div id="limit-reached" class="hidden p-6 bg-gradient-to-r from-orange-100 to-yellow-100 border-2 border-orange-300 rounded-2xl text-center animate-fade-in">
             <i class="ri-alarm-warning-line text-5xl text-orange-600 mb-3"></i>
-            <h3 class="font-bold text-gray-800">Daily Limit Reached!</h3>
-            <p class="text-sm text-gray-600 mt-1">You've used 3/3 requests. Try again tomorrow.</p>
+            <h3 class="font-bold text-xl text-gray-800">Daily Limit Reached!</h3>
+            <p class="text-sm text-gray-600 mt-2">You've used all 3 requests. Come back tomorrow!</p>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 py-5 mt-auto">
-        <div class="text-center text-xs text-gray-600">
-            Developed by <span class="font-bold text-primary">SAKIN HOSSAIN</span>
+    <footer class="bg-white border-t border-gray-200 py-4 mt-6">
+        <div class="text-center text-sm font-medium text-gray-600">
+            Developed by <span class="text-primary font-bold">SAKIN HOSSAIN</span>
         </div>
     </footer>
 
     <script>
-        // === 5 API KEYS (তুমি এখানে ৫টা API Key বসাবে) ===
+        // === 5 API KEYS ===
         const API_KEYS = [
-            "b435b58f31mshf1bf05205b2c37cp152463jsn9419df424735", // তোমার দেওয়া Key
+            "b435b58f31mshf1bf05205b2c37cp152463jsn9419df424735",
             "YOUR_SECOND_API_KEY_HERE",
             "YOUR_THIRD_API_KEY_HERE",
             "YOUR_FOURTH_API_KEY_HERE",
@@ -212,7 +225,7 @@
         ];
         const API_HOST = 'facebook-profile-picture-viewer.p.rapidapi.com';
 
-        // DOM Elements
+        // DOM
         const fbUrlInput = document.getElementById('fb-url');
         const urlValidation = document.getElementById('url-validation');
         const fetchBtn = document.getElementById('fetch-btn');
@@ -228,115 +241,71 @@
         // Daily Limit
         let dailyRequests = parseInt(localStorage.getItem('dailyRequests') || '0');
         const today = new Date().toDateString();
-        const lastDate = localStorage.getItem('lastRequestDate');
-
-        if (lastDate !== today) {
+        if (localStorage.getItem('lastRequestDate') !== today) {
             dailyRequests = 0;
             localStorage.setItem('lastRequestDate', today);
             localStorage.setItem('dailyRequests', '0');
         }
-
         requestCount.textContent = dailyRequests;
         if (dailyRequests >= 3) showLimitReached();
 
         // URL Validation
         fbUrlInput.addEventListener('input', () => {
             const url = fbUrlInput.value.trim();
-            const isValid = validateFacebookUrl(url);
-
-            if (!url) {
-                hideValidation(); disableFetch();
-            } else if (isValid) {
-                showValid(); enableFetch();
-            } else {
-                showInvalid(); disableFetch();
-            }
+            const valid = /^(https?:\/\/)?(www\.)?facebook\.com\/(profile\.php\?id=\d+|[A-Za-z0-9\.]+)/.test(url);
+            if (!url) { hideValidation(); disableFetch(); }
+            else if (valid) { showValid();138 enableFetch(); }
+            else { showInvalid(); disableFetch(); }
         });
 
-        function validateFacebookUrl(url) {
-            return /^(https?:\/\/)?(www\.)?facebook\.com\/(profile\.php\?id=\d+|[A-Za-z0-9\.]+)/.test(url);
-        }
-
         function showValid() {
-            urlValidation.className = 'mt-2 text-sm text-green-600 flex items-center';
+            urlValidation.className = 'mt-3 text-sm text-green-600 flex items-center font-medium';
             urlValidation.innerHTML = '<i class="ri-checkbox-circle-fill mr-1"></i> Valid URL';
             urlValidation.classList.remove('hidden');
         }
-
         function showInvalid() {
-            urlValidation.className = 'mt-2 text-sm text-red-600 flex items-center';
+            urlValidation.className = 'mt-3 text-sm text-red-600 flex items-center font-medium';
             urlValidation.innerHTML = '<i class="ri-close-circle-fill mr-1"></i> Invalid URL';
             urlValidation.classList.remove('hidden');
         }
-
         function hideValidation() { urlValidation.classList.add('hidden'); }
         function enableFetch() { fetchBtn.disabled = false; fetchBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
         function disableFetch() { fetchBtn.disabled = true; fetchBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
 
-        // Fetch with Fallback (5 Keys)
+        // Fetch Photo
         fetchBtn.addEventListener('click', async () => {
             if (dailyRequests >= 3) return showLimitReached();
-
             const url = fbUrlInput.value.trim();
-            if (!validateFacebookUrl(url)) return showError('Invalid Facebook URL');
+            if (!/facebook\.com/.test(url)) return showError('Please enter a valid Facebook URL');
 
             showLoading(); hideResult(); hideError();
 
             let imageUrl = null;
-            let usedKey = null;
-
             for (const key of API_KEYS) {
                 try {
-                    const encoded = encodeURIComponent(url);
-                    const apiUrl = `https://${API_HOST}/?fburl=${encoded}`;
-
-                    const response = await fetch(apiUrl, {
-                        method: 'GET',
-                        headers: {
-                            'x-rapidapi-key': key,
-                            'x-rapidapi-host': API_HOST
-                        }
+                    const res = await fetch(`https://${API_HOST}/?fburl=${encodeURIComponent(url)}`, {
+                        headers: { 'x-rapidapi-key': key, 'x-rapidapi-host': API_HOST }
                     });
-
-                    if (response.ok) {
-                        const text = await response.text();
+                    if (res.ok) {
+                        const text = await res.text();
                         let data;
-                        try {
-                            data = JSON.parse(text);
-                            imageUrl = Array.isArray(data) ? data[0] : data;
-                        } catch {
-                            const match = text.match(/"(https:\/\/[^"]+\.(jpg|jpeg|png))"/i);
-                            imageUrl = match ? match[1] : null;
-                        }
-
-                        if (imageUrl) {
-                            usedKey = key;
-                            break;
-                        }
+                        try { data = JSON.parse(text); imageUrl = Array.isArray(data) ? data[0] : data; }
+                        catch { const m = text.match(/"(https:\/\/[^"]+\.(jpg|jpeg|png))"/i); imageUrl = m ? m[1] : null; }
+                        if (imageUrl) break;
                     }
-                } catch (err) {
-                    console.log(`Key failed: ${key.substring(0, 8)}...`);
-                }
+                } catch {}
             }
 
-            if (!imageUrl) {
-                showError('Failed to fetch photo. All API keys failed or no photo found.');
-                hideLoading();
-                return;
-            }
+            if (!imageUrl) { showError('Failed to fetch photo. Try again later.'); hideLoading(); return; }
 
-            // Success
             dailyRequests++;
             localStorage.setItem('dailyRequests', dailyRequests);
             requestCount.textContent = dailyRequests;
 
             profileImage.src = imageUrl;
             showResult();
-
             downloadBtn.onclick = () => downloadImage(imageUrl);
-
-            if (dailyRequests >= 3) setTimeout(showLimitReached, 800);
-
+            if (dailyRequests >= 3) setTimeout(showLimitReached, 1000);
             hideLoading();
         });
 
@@ -351,16 +320,13 @@
 
         // Download
         function downloadImage(url) {
-            fetch(url)
-                .then(res => res.blob())
-                .then(blob => {
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = 'fb_profile_photo.jpg';
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                })
-                .catch(() => window.open(url, '_blank'));
+            fetch(url).then(r => r.blob()).then(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'fb_profile_hd.jpg';
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }).catch(() => window.open(url, '_blank'));
         }
     </script>
 </body>
