@@ -1,190 +1,387 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Viewer & Downloader</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6fb;
-      color: #222;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 10px;
-    }
-    h1 {
-      color: #1a73e8;
-      margin-bottom: 10px;
-    }
-    p {
-      max-width: 500px;
-      text-align: center;
-      font-size: 15px;
-      margin-bottom: 25px;
-    }
-    .input-box {
-      display: flex;
-      flex-direction: row;
-      width: 100%;
-      max-width: 500px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    input {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      font-size: 16px;
-      outline: none;
-    }
-    button {
-      background: #1a73e8;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #1669c1;
-    }
-    #status {
-      margin-top: 20px;
-      font-weight: bold;
-      color: #444;
-    }
-    .result {
-      margin-top: 30px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: 20px;
-      width: 100%;
-      max-width: 500px;
-    }
-    .profile {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    .profile img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .profile-info {
-      display: flex;
-      flex-direction: column;
-    }
-    .download {
-      margin-top: 15px;
-      text-align: center;
-    }
-    .download a {
-      text-decoration: none;
-      background: #28a745;
-      color: white;
-      padding: 10px 18px;
-      border-radius: 6px;
-      font-weight: bold;
-    }
-    .download a:hover {
-      background: #218838;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Profile Photo Viewer</title>
+    <!-- Google Fonts - Open Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Open Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#1877F2',
+                        dark: '#1C1E21',
+                        gray: {
+                            50: '#F0F2F5',
+                            100: '#E4E6EB',
+                            200: '#D8DADF',
+                            700: '#606770',
+                            800: '#3A3B3C',
+                            900: '#242526',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #F0F2F5;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1877F2 0%, #0D5DBD 100%);
+        }
+        .success-animation {
+            animation: success 0.5s ease-in-out;
+        }
+        @keyframes success {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
-<body>
-  <h1>Profile Viewer & Downloader</h1>
-  <p>একটি পাবলিক প্রোফাইল বা কনটেন্টের URL দিন, তারপর নিচে ফলাফল ও ডাউনলোড লিংক দেখতে পাবেন।</p>
-
-  <div class="input-box">
-    <input type="text" id="url" placeholder="যেমন: https://facebook.com/example.profile">
-    <button id="submitBtn">Submit</button>
-  </div>
-
-  <div id="status"></div>
-  <div id="results" class="result" style="display:none;"></div>
-
-  <script>
-    const btn = document.getElementById('submitBtn');
-    const statusDiv = document.getElementById('status');
-    const resultDiv = document.getElementById('results');
-
-    async function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-
-    btn.addEventListener('click', async () => {
-      const url = document.getElementById('url').value.trim();
-      if(!url){ alert("একটি URL দিন"); return; }
-
-      statusDiv.textContent = "Submitting...";
-      resultDiv.style.display = "none";
-      resultDiv.innerHTML = "";
-
-      try {
-        // 1️⃣ Submit URL
-        let res = await fetch('/api/submit', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({url})
-        });
-        let data = await res.json();
-
-        if(!data.uuid){ 
-          statusDiv.textContent = "Error submitting URL!";
-          console.log(data);
-          return;
-        }
-
-        let uuid = data.uuid;
-        statusDiv.textContent = "Processing...";
-
-        // 2️⃣ Poll for results
-        let results = null;
-        while(!results){
-          await sleep(3000);
-          let r = await fetch('/api/results', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({uuid})
-          });
-          let d = await r.json();
-          if(d.loading){ 
-            statusDiv.textContent = "Processing...";
-            continue;
-          }
-          results = d.results;
-        }
-
-        statusDiv.textContent = "Done ✅";
-        resultDiv.style.display = "block";
-
-        // 3️⃣ Show profile + download link
-        const profilePic = results?.image || results?.photo || "https://via.placeholder.com/80";
-        const name = results?.name || "Unknown User";
-        const downloadLink = results?.download || "#";
-
-        resultDiv.innerHTML = `
-          <div class="profile">
-            <img src="${profilePic}" alt="Profile Photo">
-            <div class="profile-info">
-              <strong>${name}</strong>
-              <small>${url}</small>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-0">
+    <div class="w-full max-w-4xl">
+        <!-- Tool Section -->
+        <section class="bg-white shadow-md mb-8">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800 text-center">Facebook Profile Photo Viewer</h2>
+                <p class="text-gray-600 mt-1 text-center">Enter a Facebook profile URL to view the profile picture in high quality.</p>
+                
+                <!-- Daily Limit Display -->
+                <div class="mt-4 flex justify-center">
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg text-center">
+                        <div class="flex items-center justify-center">
+                            <i class="ri-user-search-line mr-2"></i>
+                            <span>Today daily limit: <span id="request-count" class="font-bold">0</span>/3</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="download">
-            <a href="${downloadLink}" target="_blank">Download</a>
-          </div>
-        `;
-      } catch (err) {
-        console.error(err);
-        statusDiv.textContent = "❌ Error connecting to server.";
-      }
-    });
-  </script>
+            
+            <div class="p-6">
+                <!-- Input Section -->
+                <div class="mb-6">
+                    <label for="fb-url" class="block text-gray-700 font-medium mb-2">Facebook Profile URL</label>
+                    <div class="flex">
+                        <div class="bg-gray-100 border border-r-0 border-gray-300 flex items-center px-4">
+                            <i class="ri-link text-gray-600"></i>
+                        </div>
+                        <input 
+                            type="text" 
+                            id="fb-url" 
+                            placeholder="https://www.facebook.com/username" 
+                            class="w-full border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        >
+                    </div>
+                    <div id="url-validation" class="mt-2 text-sm hidden">
+                        <i class="ri-checkbox-circle-fill mr-1"></i>
+                        <span>Valid Facebook URL</span>
+                    </div>
+                </div>
+                
+                <!-- Fetch Button -->
+                <button 
+                    id="fetch-btn" 
+                    class="w-full gradient-bg text-white py-3 px-4 font-medium flex justify-center items-center transition-all duration-300 hover:opacity-90"
+                >
+                    <i class="ri-download-cloud-line mr-2"></i>
+                    Fetch Profile Photo
+                </button>
+                
+                <!-- Loading Indicator -->
+                <div id="loading" class="hidden mt-6 flex flex-col items-center">
+                    <div class="flex items-center justify-center mb-2">
+                        <i class="ri-loader-4-line text-4xl text-primary spin"></i>
+                    </div>
+                    <p class="text-gray-700">Fetching profile photo...</p>
+                </div>
+                
+                <!-- Result Section -->
+                <div id="result" class="hidden mt-6 success-animation">
+                    <div class="bg-gray-50 p-4 border border-gray-200 mb-4">
+                        <h3 class="font-medium text-gray-800 mb-2">Profile Photo</h3>
+                        <div class="flex justify-center">
+                            <img id="profile-image" src="" alt="Profile Photo" class="max-w-full h-auto max-h-96">
+                        </div>
+                    </div>
+                    <button 
+                        id="download-btn" 
+                        class="w-full bg-green-600 text-white py-3 px-4 font-medium flex justify-center items-center transition-all duration-300 hover:bg-green-700"
+                    >
+                        <i class="ri-download-line mr-2"></i>
+                        Download Photo
+                    </button>
+                </div>
+                
+                <!-- Error Message -->
+                <div id="error" class="hidden mt-4 p-4 bg-red-50 border border-red-200 text-red-700">
+                    <i class="ri-error-warning-line mr-2"></i>
+                    <span id="error-message"></span>
+                </div>
+                
+                <!-- Daily Limit Reached -->
+                <div id="limit-reached" class="hidden mt-6 p-6 bg-gray-100 border border-gray-300 text-center">
+                    <i class="ri-error-warning-line text-4xl text-gray-500 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">Daily Limit Reached</h3>
+                    <p class="text-gray-600">You've reached the daily limit of 3 API requests. Please try again tomorrow.</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Features Section -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white shadow-md p-6 text-center">
+                <div class="bg-primary bg-opacity-10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ri-eye-line text-primary text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">High Quality View</h3>
+                <p class="text-gray-600">View Facebook profile photos in high resolution and clarity.</p>
+            </div>
+            
+            <div class="bg-white shadow-md p-6 text-center">
+                <div class="bg-primary bg-opacity-10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ri-download-line text-primary text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Easy Download</h3>
+                <p class="text-gray-600">Download profile photos with a single click for personal use.</p>
+            </div>
+            
+            <div class="bg-white shadow-md p-6 text-center">
+                <div class="bg-primary bg-opacity-10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="ri-shield-check-line text-primary text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Secure & Private</h3>
+                <p class="text-gray-600">Your requests are secure and we don't store any personal data.</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // API Keys (multiple keys for fallback)
+        const apiKeys = [
+            "YOUR_FIRST_API_KEY_HERE",
+            "YOUR_SECOND_API_KEY_HERE",
+            "YOUR_THIRD_API_KEY_HERE"
+        ];
+        
+        // DOM Elements
+        const fbUrlInput = document.getElementById('fb-url');
+        const urlValidation = document.getElementById('url-validation');
+        const fetchBtn = document.getElementById('fetch-btn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const profileImage = document.getElementById('profile-image');
+        const downloadBtn = document.getElementById('download-btn');
+        const error = document.getElementById('error');
+        const errorMessage = document.getElementById('error-message');
+        const limitReached = document.getElementById('limit-reached');
+        const requestCount = document.getElementById('request-count');
+        
+        // Initialize daily request count from localStorage
+        let dailyRequests = parseInt(localStorage.getItem('dailyRequests')) || 0;
+        const today = new Date().toDateString();
+        const lastRequestDate = localStorage.getItem('lastRequestDate');
+        
+        // Reset counter if it's a new day
+        if (lastRequestDate !== today) {
+            dailyRequests = 0;
+            localStorage.setItem('lastRequestDate', today);
+            localStorage.setItem('dailyRequests', dailyRequests);
+        }
+        
+        // Update request count display
+        requestCount.textContent = dailyRequests;
+        
+        // Check if daily limit reached
+        if (dailyRequests >= 3) {
+            showLimitReached();
+        }
+        
+        // URL validation
+        fbUrlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            const isValid = validateFacebookUrl(url);
+            
+            if (url === '') {
+                urlValidation.classList.add('hidden');
+                fetchBtn.disabled = true;
+                fetchBtn.classList.add('opacity-50');
+                fetchBtn.classList.remove('hover:opacity-90');
+            } else if (isValid) {
+                urlValidation.classList.remove('hidden');
+                urlValidation.className = 'mt-2 text-sm text-green-600';
+                urlValidation.innerHTML = '<i class="ri-checkbox-circle-fill mr-1"></i><span>Valid Facebook URL</span>';
+                fetchBtn.disabled = false;
+                fetchBtn.classList.remove('opacity-50');
+                fetchBtn.classList.add('hover:opacity-90');
+            } else {
+                urlValidation.classList.remove('hidden');
+                urlValidation.className = 'mt-2 text-sm text-red-600';
+                urlValidation.innerHTML = '<i class="ri-close-circle-fill mr-1"></i><span>Please enter a valid Facebook URL</span>';
+                fetchBtn.disabled = true;
+                fetchBtn.classList.add('opacity-50');
+                fetchBtn.classList.remove('hover:opacity-90');
+            }
+        });
+        
+        // Validate Facebook URL
+        function validateFacebookUrl(url) {
+            const facebookUrlPattern = /^(https?:\/\/)?(www\.)?facebook\.com\/([a-zA-Z0-9\.]+|profile\.php\?id=\d+)/;
+            return facebookUrlPattern.test(url);
+        }
+        
+        // Fetch profile photo
+        fetchBtn.addEventListener('click', async function() {
+            if (dailyRequests >= 3) {
+                showLimitReached();
+                return;
+            }
+            
+            const url = fbUrlInput.value.trim();
+            if (!validateFacebookUrl(url)) {
+                showError('Please enter a valid Facebook URL');
+                return;
+            }
+            
+            // Show loading, hide other elements
+            loading.classList.remove('hidden');
+            result.classList.add('hidden');
+            error.classList.add('hidden');
+            fetchBtn.disabled = true;
+            
+            try {
+                // Encode the URL for the API
+                const encodedUrl = encodeURIComponent(url);
+                const apiUrl = `https://facebook-profile-picture-viewer.p.rapidapi.com/?fburl=${encodedUrl}`;
+                
+                // Try each API key until one works
+                let responseData = null;
+                let responseOk = false;
+                
+                for (let i = 0; i < apiKeys.length; i++) {
+                    try {
+                        const options = {
+                            method: 'GET',
+                            headers: {
+                                'x-rapidapi-key': apiKeys[i],
+                                'x-rapidapi-host': 'facebook-profile-picture-viewer.p.rapidapi.com'
+                            }
+                        };
+                        
+                        const response = await fetch(apiUrl, options);
+                        
+                        if (response.ok) {
+                            responseData = await response.text();
+                            responseOk = true;
+                            break; // Success, break out of the loop
+                        }
+                    } catch (err) {
+                        console.error(`API key ${i+1} failed:`, err);
+                        // Continue to next API key
+                    }
+                }
+                
+                if (!responseOk) {
+                    throw new Error('All API keys failed. Please try again later.');
+                }
+                
+                // Parse the response (it's an array with one URL)
+                let imageUrls;
+                try {
+                    imageUrls = JSON.parse(responseData);
+                } catch (parseError) {
+                    // If JSON parsing fails, try to extract URL from response text
+                    const urlMatch = responseData.match(/"([^"]*\.(jpg|jpeg|png|gif))"/i);
+                    if (urlMatch && urlMatch[1]) {
+                        imageUrls = [urlMatch[1]];
+                    } else {
+                        throw new Error('Failed to parse API response');
+                    }
+                }
+                
+                if (imageUrls && imageUrls.length > 0) {
+                    // Update daily request count
+                    dailyRequests++;
+                    localStorage.setItem('dailyRequests', dailyRequests);
+                    requestCount.textContent = dailyRequests;
+                    
+                    // Display the image
+                    profileImage.src = imageUrls[0];
+                    result.classList.remove('hidden');
+                    
+                    // Set up download button
+                    downloadBtn.onclick = function() {
+                        downloadImage(imageUrls[0]);
+                    };
+                    
+                    // Check if we've reached the daily limit
+                    if (dailyRequests >= 3) {
+                        showLimitReached();
+                    }
+                } else {
+                    throw new Error('No profile photo found for this URL');
+                }
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loading.classList.add('hidden');
+                fetchBtn.disabled = false;
+            }
+        });
+        
+        // Download image function - Fixed to directly download
+        function downloadImage(url) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = blobUrl;
+                    a.download = 'facebook_profile_photo.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(blobUrl);
+                    document.body.removeChild(a);
+                })
+                .catch(err => {
+                    console.error('Download failed:', err);
+                    // Fallback: open in new tab if download fails
+                    window.open(url, '_blank');
+                });
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            error.classList.remove('hidden');
+        }
+        
+        // Show daily limit reached message
+        function showLimitReached() {
+            limitReached.classList.remove('hidden');
+            fetchBtn.disabled = true;
+            fetchBtn.classList.add('opacity-50');
+            fetchBtn.classList.remove('hover:opacity-90');
+        }
+    </script>
 </body>
 </html>
