@@ -1,306 +1,190 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My SMM Panel</title>
-    <!-- Bootstrap CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-        }
-        #wrapper {
-            display: flex;
-        }
-        #sidebar-wrapper {
-            min-height: 100vh;
-            margin-left: -15rem;
-            transition: margin .25s ease-out;
-            background-color: #343a40; /* Dark sidebar */
-            color: #fff;
-            width: 15rem;
-        }
-        #sidebar-wrapper .sidebar-heading {
-            padding: 1.0rem 1.25rem;
-            font-size: 1.2rem;
-            color: #fff;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        #sidebar-wrapper .list-group {
-            width: 100%;
-        }
-        #sidebar-wrapper .list-group-item {
-            background-color: #343a40;
-            color: #adb5bd;
-            border: none;
-            padding: 0.75rem 1.25rem;
-            transition: background-color 0.2s, color 0.2s;
-            display: flex;
-            align-items: center;
-        }
-        #sidebar-wrapper .list-group-item i {
-            margin-right: 0.75rem;
-            font-size: 1.1rem;
-        }
-        #sidebar-wrapper .list-group-item:hover {
-            background-color: #495057;
-            color: #fff;
-        }
-        #sidebar-wrapper .list-group-item.active {
-            background-color: #0d6efd; /* Bootstrap primary blue */
-            color: #fff;
-            font-weight: bold;
-        }
-        #page-content-wrapper {
-            min-width: 100vw;
-        }
-        #wrapper.toggled #sidebar-wrapper {
-            margin-left: 0;
-        }
-        @media (min-width: 768px) {
-            #sidebar-wrapper {
-                margin-left: 0;
-            }
-            #page-content-wrapper {
-                min-width: 0;
-                width: 100%;
-            }
-            #wrapper.toggled #sidebar-wrapper {
-                margin-left: -15rem;
-            }
-        }
-        .navbar {
-            box-shadow: 0 2px 4px rgba(0,0,0,.05);
-        }
-        .card {
-            border-radius: 0.75rem;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            border: none;
-        }
-        .dashboard-card-icon {
-            font-size: 2.5rem;
-            opacity: 0.3;
-            position: absolute;
-            right: 15px;
-            bottom: 15px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Viewer & Downloader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6fb;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 10px;
+    }
+    h1 {
+      color: #1a73e8;
+      margin-bottom: 10px;
+    }
+    p {
+      max-width: 500px;
+      text-align: center;
+      font-size: 15px;
+      margin-bottom: 25px;
+    }
+    .input-box {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      max-width: 500px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      font-size: 16px;
+      outline: none;
+    }
+    button {
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1669c1;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #444;
+    }
+    .result {
+      margin-top: 30px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      width: 100%;
+      max-width: 500px;
+    }
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .profile img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .download {
+      margin-top: 15px;
+      text-align: center;
+    }
+    .download a {
+      text-decoration: none;
+      background: #28a745;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .download a:hover {
+      background: #218838;
+    }
+  </style>
 </head>
 <body>
-    <div class="d-flex" id="wrapper">
-        <!-- Sidebar -->
-        <div class="bg-dark border-right" id="sidebar-wrapper">
-            <div class="sidebar-heading">My SMM Panel</div>
-            <div class="list-group list-group-flush">
-                <a href="#" class="list-group-item list-group-item-action bg-dark active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                <a href="#" class="list-group-item list-group-item-action bg-dark"><i class="fas fa-plus-circle"></i> New Order</a>
-                <a href="#" class="list-group-item list-group-item-action bg-dark"><i class="fas fa-list"></i> Services</a>
-                <a href="#" class="list-group-item list-group-item-action bg-dark"><i class="fas fa-shopping-cart"></i> Orders</a>
-                <a href="#" class="list-group-item list-group-item-action bg-dark"><i class="fas fa-wallet"></i> Add Funds</a>
-                <a href="#" class="list-group-item list-group-item-action bg-dark"><i class="fas fa-code"></i> API</a>
-                <a href="#" class="list-group-item list-group-item-action bg-dark"><i class="fas fa-headset"></i> Support Tickets</a>
-                <a href="#" class="list-group-item list-group-item-action bg-dark"><i class="fas fa-user-circle"></i> Profile</a>
-            </div>
-        </div>
-        <!-- /#sidebar-wrapper -->
+  <h1>Profile Viewer & Downloader</h1>
+  <p>একটি পাবলিক প্রোফাইল বা কনটেন্টের URL দিন, তারপর নিচে ফলাফল ও ডাউনলোড লিংক দেখতে পাবেন।</p>
 
-        <!-- Page Content -->
-        <div id="page-content-wrapper">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-                <button class="btn btn-primary" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+  <div class="input-box">
+    <input type="text" id="url" placeholder="যেমন: https://facebook.com/example.profile">
+    <button id="submitBtn">Submit</button>
+  </div>
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                        <li class="nav-item active">
-                            <a class="nav-link" href="#"><i class="fas fa-bell"></i> <span class="badge bg-danger">4</span></a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-user"></i> My Account
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="#">Settings</a>
-                                <a class="dropdown-item" href="#">Activity Log</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#">Logout</a>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+  <div id="status"></div>
+  <div id="results" class="result" style="display:none;"></div>
 
-            <div class="container-fluid p-4">
-                <h1 class="mt-4 mb-4">Dashboard</h1>
+  <script>
+    const btn = document.getElementById('submitBtn');
+    const statusDiv = document.getElementById('status');
+    const resultDiv = document.getElementById('results');
 
-                <!-- Dashboard Cards -->
-                <div class="row mb-4">
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="card text-white bg-primary h-100">
-                            <div class="card-body">
-                                <div class="text-white-50 small">Your Balance</div>
-                                <h2 class="card-title">$1,250.00</h2>
-                                <i class="fas fa-wallet dashboard-card-icon"></i>
-                            </div>
-                            <div class="card-footer d-flex align-items-center justify-content-between">
-                                <a class="small text-white stretched-link" href="#">View Details</a>
-                                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="card text-white bg-success h-100">
-                            <div class="card-body">
-                                <div class="text-white-50 small">Total Orders</div>
-                                <h2 class="card-title">8,200</h2>
-                                <i class="fas fa-shopping-cart dashboard-card-icon"></i>
-                            </div>
-                            <div class="card-footer d-flex align-items-center justify-content-between">
-                                <a class="small text-white stretched-link" href="#">View Orders</a>
-                                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="card text-white bg-warning h-100">
-                            <div class="card-body">
-                                <div class="text-white-50 small">Pending Orders</div>
-                                <h2 class="card-title">125</h2>
-                                <i class="fas fa-hourglass-half dashboard-card-icon"></i>
-                            </div>
-                            <div class="card-footer d-flex align-items-center justify-content-between">
-                                <a class="small text-white stretched-link" href="#">View Pending</a>
-                                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 mb-4">
-                        <div class="card text-white bg-info h-100">
-                            <div class="card-body">
-                                <div class="text-white-50 small">New Tickets</div>
-                                <h2 class="card-title">7</h2>
-                                <i class="fas fa-headset dashboard-card-icon"></i>
-                            </div>
-                            <div class="card-footer d-flex align-items-center justify-content-between">
-                                <a class="small text-white stretched-link" href="#">View Tickets</a>
-                                <div class="small text-white"><i class="fas fa-angle-right"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    async function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
-                <!-- New Order Form -->
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <i class="fas fa-plus-circle me-2"></i> Place New Order
-                    </div>
-                    <div class="card-body">
-                        <form id="newOrderForm">
-                            <div class="mb-3">
-                                <label for="serviceCategory" class="form-label">Service Category</label>
-                                <select class="form-select" id="serviceCategory" required>
-                                    <option selected disabled value="">Choose...</option>
-                                    <option value="instagram">Instagram Services</option>
-                                    <option value="youtube">YouTube Services</option>
-                                    <option value="facebook">Facebook Services</option>
-                                    <!-- More categories will be loaded dynamically -->
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="service" class="form-label">Service</label>
-                                <select class="form-select" id="service" required>
-                                    <option selected disabled value="">Choose a service...</option>
-                                    <!-- Services will be loaded dynamically based on category -->
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="link" class="form-label">Link</label>
-                                <input type="url" class="form-control" id="link" placeholder="Enter link (e.g., Instagram post URL)" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="quantity" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="quantity" min="1" placeholder="Enter quantity" required>
-                            </div>
-                            <!-- Optional fields for specific services can be added here, e.g., comments for custom comment service -->
-                            <button type="submit" class="btn btn-primary">Place Order</button>
-                        </form>
-                    </div>
-                </div>
+    btn.addEventListener('click', async () => {
+      const url = document.getElementById('url').value.trim();
+      if(!url){ alert("একটি URL দিন"); return; }
 
-                <!-- Recent Orders Table -->
-                <div class="card mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <i class="fas fa-shopping-cart me-2"></i> Recent Orders
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Order ID</th>
-                                        <th>Service</th>
-                                        <th>Link</th>
-                                        <th>Quantity</th>
-                                        <th>Status</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="recentOrdersTableBody">
-                                    <!-- Dynamic content will go here -->
-                                    <tr>
-                                        <td>#1001</td>
-                                        <td>Instagram Likes</td>
-                                        <td><a href="#">instagram.com/p/abc</a></td>
-                                        <td>500</td>
-                                        <td><span class="badge bg-success">Completed</span></td>
-                                        <td>2023-11-20</td>
-                                    </tr>
-                                    <tr>
-                                        <td>#1002</td>
-                                        <td>YouTube Views</td>
-                                        <td><a href="#">youtube.com/watch?v=xyz</a></td>
-                                        <td>1000</td>
-                                        <td><span class="badge bg-warning">Pending</span></td>
-                                        <td>2023-11-21</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+      statusDiv.textContent = "Submitting...";
+      resultDiv.style.display = "none";
+      resultDiv.innerHTML = "";
 
-            </div>
-        </div>
-        <!-- /#page-content-wrapper -->
-    </div>
-    <!-- /#wrapper -->
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Menu Toggle Script -->
-    <script>
-        document.getElementById("sidebarToggle").addEventListener("click", function(e) {
-            e.preventDefault();
-            document.getElementById("wrapper").classList.toggle("toggled");
+      try {
+        // 1️⃣ Submit URL
+        let res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({url})
         });
+        let data = await res.json();
 
-        // This is where you would add Firebase/JavaScript logic
-        // to interact with your Cloud Functions, fetch services, handle orders, etc.
-        // For example:
-        // document.getElementById('newOrderForm').addEventListener('submit', async (e) => {
-        //     e.preventDefault();
-        //     const service = document.getElementById('service').value;
-        //     const link = document.getElementById('link').value;
-        //     const quantity = parseInt(document.getElementById('quantity').value);
+        if(!data.uuid){ 
+          statusDiv.textContent = "Error submitting URL!";
+          console.log(data);
+          return;
+        }
 
-        //     // Here you would call your Firebase Cloud Function
-        //     // Example: firebase.functions().httpsCallable('placeSmmOrder')({ service, link, quantity });
-        //     alert('Order placed (frontend simulation)! You need to integrate with backend.');
-        // });
-    </script>
+        let uuid = data.uuid;
+        statusDiv.textContent = "Processing...";
+
+        // 2️⃣ Poll for results
+        let results = null;
+        while(!results){
+          await sleep(3000);
+          let r = await fetch('/api/results', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({uuid})
+          });
+          let d = await r.json();
+          if(d.loading){ 
+            statusDiv.textContent = "Processing...";
+            continue;
+          }
+          results = d.results;
+        }
+
+        statusDiv.textContent = "Done ✅";
+        resultDiv.style.display = "block";
+
+        // 3️⃣ Show profile + download link
+        const profilePic = results?.image || results?.photo || "https://via.placeholder.com/80";
+        const name = results?.name || "Unknown User";
+        const downloadLink = results?.download || "#";
+
+        resultDiv.innerHTML = `
+          <div class="profile">
+            <img src="${profilePic}" alt="Profile Photo">
+            <div class="profile-info">
+              <strong>${name}</strong>
+              <small>${url}</small>
+            </div>
+          </div>
+          <div class="download">
+            <a href="${downloadLink}" target="_blank">Download</a>
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        statusDiv.textContent = "❌ Error connecting to server.";
+      }
+    });
+  </script>
 </body>
 </html>
