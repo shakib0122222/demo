@@ -3,81 +3,49 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FB প্রোফাইল ভিউয়ার — Single File</title>
+  <title>FB Profile Viewer — Direct RapidAPI Demo</title>
 
   <style>
     :root{
-      --bg:#f7f9fc;
-      --card:#ffffff;
-      --accent:#1976d2;
-      --muted:#666;
-      --success:#10b981;
-      --danger:#b91c1c;
+      --bg:#f7f9fc; --card:#fff; --accent:#1976d2; --muted:#666;
+      --success:#10b981; --danger:#b91c1c;
     }
     *{box-sizing:border-box}
     body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-      background:var(--bg);
-      color:#0b1220;
-      -webkit-font-smoothing:antialiased;
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background:var(--bg); color:#0b1220; -webkit-font-smoothing:antialiased;
     }
-    .container{
-      max-width:760px;
-      margin:18px auto;
-      padding:18px;
-    }
+    .wrap{max-width:760px;margin:18px auto;padding:18px}
     header{display:flex;flex-direction:column;gap:6px}
     header h1{margin:0;font-size:20px}
     .muted{color:var(--muted)}
-    .card{
-      background:var(--card);
-      border-radius:12px;
-      padding:14px;
-      margin-top:14px;
-      box-shadow:0 6px 18px rgba(16,24,40,0.06);
-    }
+    .card{background:var(--card);border-radius:12px;padding:14px;margin-top:14px;
+          box-shadow:0 6px 18px rgba(16,24,40,0.06)}
     label{font-weight:600}
-    input[type="url"]{
-      width:100%;
-      padding:12px;
-      margin-top:8px;
-      border-radius:8px;
-      border:1px solid #e6eef8;
-      font-size:15px;
-    }
+    input[type="url"]{width:100%;padding:12px;margin-top:8px;border-radius:8px;
+                      border:1px solid #e6eef8;font-size:15px}
     .row{display:flex;gap:8px;margin-top:12px}
-    .btn{
-      flex:1;
-      background:var(--accent);
-      color:white;
-      padding:10px 12px;
-      border-radius:8px;
-      border:none;
-      font-weight:600;
-      font-size:15px;
-      cursor:pointer;
-    }
+    .btn{flex:1;background:var(--accent);color:white;padding:10px 12px;border-radius:8px;
+         border:none;font-weight:600;font-size:15px;cursor:pointer}
     .btn.ghost{background:transparent;color:var(--accent);border:1px solid #dbeeff}
     .notice{margin-top:10px;color:#b45309;min-height:20px}
     .hidden{display:none}
     .preview{display:flex;gap:12px;align-items:center;margin-top:12px}
     .preview img{width:96px;height:96px;border-radius:10px;object-fit:cover}
     .links{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-    .link-btn{display:inline-block;padding:9px 12px;border-radius:8px;background:var(--success);color:white;text-decoration:none;font-weight:600}
+    .link-btn{display:inline-block;padding:9px 12px;border-radius:8px;background:var(--success);
+              color:white;text-decoration:none;font-weight:600}
     .small{font-size:12px}
     pre.debug{background:#0f1724;color:#e6eef8;padding:10px;border-radius:8px;overflow:auto;font-size:12px}
     footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
-    @media (max-width:420px){
-      .preview img{width:72px;height:72px}
-    }
+    @media (max-width:420px){ .preview img{width:72px;height:72px} }
   </style>
 </head>
 <body>
-  <main class="container">
+  <main class="wrap">
     <header>
-      <h1>FB প্রোফাইল ভিউয়ার</h1>
-      <div class="muted">পাবলিক Facebook প্রোফাইলের ছবি বের করে ডাউনলোড লিংক দেখাবে। (শুধুমাত্র public)</div>
+      <h1>FB প্রোফাইল ভিউয়ার (Direct RapidAPI)</h1>
+      <div class="muted">পাবলিক Facebook প্রোফাইলের প্রোফাইল ছবি বের করে দেখাবে ও ডাউনলোড নিশ্চিত করবে। (ডেমো)</div>
     </header>
 
     <section class="card" aria-labelledby="form-title">
@@ -101,12 +69,20 @@
       </details>
     </section>
 
-    <footer class="muted small">মনে রাখবেন: কেবল পাবলিক কনটেন্ট ব্যবহার করুন। ব্যাকএন্ডে RapidAPI কী সার্ভার-সাইডে সেভ করে রেখো — ফ্রন্টএন্ডে কী রাখলে ঝুঁকি বাড়ে।</footer>
+    <footer class="muted small">
+      ⚠️ ডেমো মোড — কী ফ্রন্টএন্ডে এম্বেড করা আছে। প্রোডাকশনে ব্যাকএন্ড প্রক্সি ব্যবহার করো ও কী রোটেট করো।
+    </footer>
   </main>
 
   <script>
     (function(){
-      // Single-file frontend JS
+      // === CONFIG ===
+      // তোমার RapidAPI key এখানে বসাও (তুমি যে key দিয়েছেন)
+      const RAPIDAPI_KEY = "b435b58f31mshf1bf05205b2c37cp152463jsn9419df424735";
+      const RAPIDAPI_HOST = "facebook-profile-picture-viewer.p.rapidapi.com";
+      const ENDPOINT = "https://facebook-profile-picture-viewer.p.rapidapi.com/";
+
+      // === UI elements ===
       const btn = document.getElementById('btn');
       const clearBtn = document.getElementById('clear');
       const urlInput = document.getElementById('url');
@@ -114,8 +90,8 @@
       const output = document.getElementById('output');
       const preview = document.getElementById('preview');
       const links = document.getElementById('links');
-      const rawbox = document.getElementById('rawbox');
       const rawpre = document.getElementById('raw');
+      const rawbox = document.getElementById('rawbox');
 
       function showNotice(text, isError=false){
         notice.textContent = text || '';
@@ -145,17 +121,24 @@
         }
       }
 
-      async function postJSON(path, body){
-        const resp = await fetch(path, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(body)
+      async function callRapidApi(fburl){
+        const url = ENDPOINT + "?fburl=" + encodeURIComponent(fburl);
+        const resp = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'x-rapidapi-host': RAPIDAPI_HOST,
+            'x-rapidapi-key': RAPIDAPI_KEY
+          }
         });
         const ct = resp.headers.get('Content-Type') || '';
         let data;
         try {
-          if(ct.includes('application/json')) data = await resp.json();
-          else data = {raw: await resp.text()};
+          if(ct.includes('application/json')){
+            data = await resp.json();
+          } else {
+            const text = await resp.text();
+            try { data = JSON.parse(text); } catch(e) { data = {raw: text}; }
+          }
         } catch(e){
           data = {raw: 'Error parsing response'};
         }
@@ -164,75 +147,61 @@
 
       btn.addEventListener('click', async () => {
         clearOutput();
-        const url = urlInput.value.trim();
-        if(!url){
+        const fburl = urlInput.value.trim();
+        if(!fburl){
           showNotice('একটি Facebook URL দিন।', true);
           return;
         }
-        if(!isLikelyFacebookUrl(url)){
-          showNotice('দয়া করে একটি বৈধ Facebook URL দিন।', true);
+        if(!isLikelyFacebookUrl(fburl)){
+          showNotice('দয়া করে একটি বৈধ Facebook URL দিন।', true);
           return;
         }
 
-        showNotice('কাজ চলছে — অনুরোধ পাঠানো হচ্ছে...');
+        showNotice('অনুরোধ পাঠানো হচ্ছে...');
         btn.disabled = true;
+
         try {
-          // POST to your backend proxy (must implement /api/profile)
-          const resp = await postJSON('/api/profile', {url});
-          if(resp.status !== 200){
-            showNotice(resp.data && (resp.data.error || resp.data.message) || ('Upstream status: ' + resp.status), true);
-            rawpre.textContent = JSON.stringify(resp.data, null, 2);
+          const res = await callRapidApi(fburl);
+
+          if(res.status !== 200){
+            showNotice('Upstream error: ' + (res.data && res.data.error ? res.data.error : res.status), true);
+            rawpre.textContent = JSON.stringify(res.data, null, 2);
             rawbox.open = true;
-            output.classList.remove('hidden'); // show raw
-            return;
-          }
-
-          // expected: { status_code: 200, data: {...} } OR direct data
-          const payload = resp.data.data !== undefined ? resp.data.data : resp.data;
-
-          // show raw response for debugging
-          rawpre.textContent = JSON.stringify(payload, null, 2);
-          rawbox.open = false;
-
-          // try detect image url (common patterns)
-          let imageUrl = null;
-          if(!payload) {
-            showNotice('রেসপন্স খালি — পরীক্ষা করুন সার্ভার লগ।', true);
             output.classList.remove('hidden');
             return;
           }
 
-          // payload might be string, object, array
-          if(typeof payload === 'string'){
-            // maybe direct URL
-            if(payload.match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i)) imageUrl = payload;
-          } else if(Array.isArray(payload)){
-            // try find first image-like string
-            for(const it of payload){
-              if(typeof it === 'string' && it.match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i)){ imageUrl = it; break; }
-              if(it && it.url && typeof it.url === 'string' && it.url.match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)/i)){ imageUrl = it.url; break; }
-            }
-          } else if(typeof payload === 'object'){
-            // common keys
-            const candidates = ['image','img','url','picture','photo','data','image_url'];
-            for(const k of candidates){
-              if(payload[k] && typeof payload[k] === 'string' && payload[k].match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i)){
-                imageUrl = payload[k]; break;
+          const payload = res.data;
+          rawpre.textContent = JSON.stringify(payload, null, 2);
+          rawbox.open = false;
+
+          // Try to locate image URL in payload
+          let imageUrl = null;
+          // If payload has direct keys
+          if(typeof payload === 'string' && payload.match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)/i)){
+            imageUrl = payload;
+          } else if(payload){
+            // common possible fields
+            const tryKeys = ['url','image','img','picture','photo','image_url','profile_pic','profile_picture'];
+            for(const k of tryKeys){
+              if(payload[k] && typeof payload[k] === 'string' && payload[k].match(/^https?:\/\/.*\.(jpg|jpeg|png|webp|gif)/i)){
+                imageUrl = payload[k];
+                break;
               }
             }
-            // nested: sometimes payload.data.url
+            // nested search
             if(!imageUrl && payload.data){
               if(typeof payload.data === 'string' && payload.data.match(/^https?:\/\/.*\.(jpg|png|jpeg|webp|gif)/i)) imageUrl = payload.data;
               if(Array.isArray(payload.data)){
                 for(const it of payload.data){
+                  if(it && typeof it === 'string' && it.match(/^https?:\/\/.*\.(jpg|png|jpeg|webp|gif)/i)){ imageUrl = it; break; }
                   if(it && it.url && typeof it.url === 'string' && it.url.match(/^https?:\/\/.*\.(jpg|png|jpeg|webp|gif)/i)){ imageUrl = it.url; break; }
                 }
               } else if(typeof payload.data === 'object' && payload.data.url){
                 imageUrl = payload.data.url;
               }
             }
-
-            // fallback: search any string-looking image inside JSON text
+            // last resort: regex search in whole JSON text
             if(!imageUrl){
               const txt = JSON.stringify(payload);
               const m = txt.match(/https?:\/\/[^"\s\\]+\.(?:jpg|jpeg|png|webp|gif)(\?[^"\\\s]+)?/i);
@@ -241,12 +210,12 @@
           }
 
           if(!imageUrl){
-            showNotice('ইমেজ লিংক পাওয়া যায়নি — raw response দেখুন।', true);
+            showNotice('ইমেজ লিংক পাওয়া যায়নি — Raw response দেখুন।', true);
             output.classList.remove('hidden');
             return;
           }
 
-          // build UI
+          // Build preview & links
           const imgEl = document.createElement('img');
           imgEl.src = imageUrl;
           imgEl.alt = 'Profile Image';
@@ -255,7 +224,6 @@
           preview.appendChild(imgEl);
           preview.appendChild(infoDiv);
 
-          // open/download link
           const a = document.createElement('a');
           a.href = imageUrl;
           a.target = '_blank';
@@ -263,18 +231,13 @@
           a.textContent = 'Open / Download';
           links.appendChild(a);
 
-          // copy link button
           const copy = document.createElement('button');
           copy.className = 'btn ghost small';
           copy.textContent = 'Copy link';
           copy.style.padding = '8px';
           copy.addEventListener('click', async () => {
-            try {
-              await navigator.clipboard.writeText(imageUrl);
-              showNotice('লিংক কপি করা হয়েছে।');
-            } catch (e) {
-              showNotice('কপি করা যায়নি।', true);
-            }
+            try { await navigator.clipboard.writeText(imageUrl); showNotice('লিংক কপি করা হয়েছে।'); }
+            catch(e){ showNotice('কপি করা যায়নি।', true); }
           });
           links.appendChild(copy);
 
@@ -283,7 +246,7 @@
 
         } catch (err){
           console.error(err);
-          showNotice('সার্ভারের সাথে যোগাযোগে ত্রুটি হয়েছে।', true);
+          showNotice('ত্রুটি: সার্ভারের সাথে যোগাযোগে সমস্যা হয়েছে।', true);
           rawpre.textContent = err && err.toString ? err.toString() : JSON.stringify(err);
           rawbox.open = true;
           output.classList.remove('hidden');
@@ -292,12 +255,8 @@
         }
       });
 
-      // enable enter key submit
-      urlInput.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter'){ btn.click(); }
-      });
-
-      // initial focus
+      // Enter to submit
+      urlInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') btn.click(); });
       urlInput.focus();
     })();
   </script>
